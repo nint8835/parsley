@@ -20,6 +20,27 @@ type Parser struct {
 	commands map[string]Command
 }
 
+// NewCommand registers a new command with the command parser.
+func (parser *Parser) NewCommand(name, description string, handler interface{}) error {
+	err := _ValidateHandler(handler)
+	if err != nil {
+		return fmt.Errorf("invalid command handler: %w", err)
+	}
+	command := Command{description, handler}
+	parser.commands[name] = command
+
+	return nil
+}
+
+// RunCommand parses the content of a specific message and runs the associated command, if found.
+func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
+	if !strings.HasPrefix(message.Content, parser.prefix) {
+		return nil // TODO: Actual error here
+	}
+
+	return nil
+}
+
 // New creates a new Parsley parser.
 func New(prefix string) *Parser {
 	return &Parser{
@@ -42,26 +63,5 @@ func _ValidateHandler(handler interface{}) error {
 	if handlerType.In(1).Kind() != reflect.Struct {
 		return ErrHandlerInvalidSecondParameterType
 	}
-	return nil
-}
-
-// NewCommand registers a new command with the command parser.
-func (parser *Parser) NewCommand(name, description string, handler interface{}) error {
-	err := _ValidateHandler(handler)
-	if err != nil {
-		return fmt.Errorf("invalid command handler: %w", err)
-	}
-	command := Command{description, handler}
-	parser.commands[name] = command
-
-	return nil
-}
-
-// RunCommand parses the content of a specific message and runs the associated command, if found.
-func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
-	if !strings.HasPrefix(message.Content, parser.prefix) {
-		return nil // TODO: Actual error here
-	}
-
 	return nil
 }
