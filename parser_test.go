@@ -61,3 +61,12 @@ func TestNewCommandWithInvalidSecondParameterType(t *testing.T) {
 		t.Error("parser did not return correct error")
 	}
 }
+
+func TestNewCommandWithValidData(t *testing.T) {
+	parser := New("")
+
+	err := parser.NewCommand("", "", func(a *discordgo.MessageCreate, b struct{}) {})
+	if err != nil {
+		t.Errorf("adding command returned unexpected error")
+	}
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -52,6 +53,15 @@ func (parser *Parser) NewCommand(name, description string, handler interface{}) 
 	}
 	command := Command{description, handler}
 	parser.commands[name] = command
+
+	return nil
+}
+
+// RunCommand parses the content of a specific message and runs the associated command, if found.
+func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
+	if !strings.HasPrefix(message.Content, parser.prefix) {
+		return nil // TODO: Actual error here
+	}
 
 	return nil
 }
