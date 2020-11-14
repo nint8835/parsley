@@ -17,6 +17,21 @@ type Command struct {
 	handler     interface{}
 }
 
+// ArgumentDetails represents the details of an individual command argument.
+type ArgumentDetails struct {
+	Name     string
+	Type     string
+	Required bool
+	Default  string
+}
+
+// CommandDetails represents the parsed details of an individual command.
+type CommandDetails struct {
+	Name        string
+	Description string
+	Arguments   []ArgumentDetails
+}
+
 // Parser represents a parser for Discord commands.
 type Parser struct {
 	prefix   string
@@ -45,10 +60,6 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 	arguments[0] = strings.TrimPrefix(arguments[0], parser.prefix)
 	if err != nil {
 		return fmt.Errorf("error parsing arguments: %w", err)
-	}
-
-	if len(arguments) == 0 {
-		return fmt.Errorf("error running command: %w", ErrNoCommandProvided)
 	}
 
 	command, ok := parser.commands[arguments[0]]
@@ -111,6 +122,36 @@ func (parser *Parser) RegisterHandler(session *discordgo.Session) {
 			}
 		}
 	})
+}
+
+// GetCommands parses all registered commands and returns details related to each of them.
+func (parser *Parser) GetCommands() []CommandDetails {
+	commandDetails := make([]CommandDetails, 0)
+	for commandName, commandObj := range parser.commands {
+		commandDetailsObj := CommandDetails{
+			Name:        commandName,
+			Description: commandObj.description,
+			Arguments:   make([]ArgumentDetails, 0),
+		}
+
+		argsType := reflect.TypeOf(commandObj.handler).In(1)
+
+		for index := 0; index < argsType.NumField(); index++ {
+			arg := argsType.Field(index)
+
+			defaultVal, hasDefault := arg.Tag.Lookup("default")
+			commandDetailsObj.Arguments = append(commandDetailsObj.Arguments, ArgumentDetails{
+				Name:     arg.Name,
+				Type:     arg.Type.Name(),
+				Required: !hasDefault,
+				Default:  defaultVal,
+			})
+		}
+
+		commandDetails = append(commandDetails, commandDetailsObj)
+	}
+
+	return commandDetails
 }
 
 // New creates a new Parsley parser.

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/go-test/deep"
 )
 
 func TestNewParser(t *testing.T) {
@@ -87,15 +88,6 @@ func TestRunCommandWithSyntaxError(t *testing.T) {
 	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". \""}})
 	if err == nil {
 		t.Errorf("running command did not return error")
-	}
-}
-
-func TestRunCommandWithNoCommandProvided(t *testing.T) {
-	parser := New(".")
-
-	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "."}})
-	if errors.Unwrap(err) != ErrNoCommandProvided {
-		t.Errorf("running command did not return correct error")
 	}
 }
 
@@ -182,5 +174,90 @@ func TestRunCommandWithEmptyCommandName(t *testing.T) {
 	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "."}})
 	if err != nil {
 		t.Errorf("running command returned unexpected error")
+	}
+}
+
+func TestGetCommandsWithCommandWithRequiredArg(t *testing.T) {
+	parser := New("")
+	parser.NewCommand("", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Test string
+		}) {
+	})
+
+	commands := parser.GetCommands()
+
+	if diff := deep.Equal(commands, []CommandDetails{{
+		Name:        "",
+		Description: "",
+		Arguments: []ArgumentDetails{
+			{
+				Name:     "Test",
+				Type:     "string",
+				Required: true,
+				Default:  "",
+			},
+		},
+	}}); diff != nil {
+		t.Error(diff)
+	}
+}
+
+func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
+	parser := New("")
+	parser.NewCommand("", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Test float64 `default:"1.25"`
+		}) {
+	})
+
+	commands := parser.GetCommands()
+
+	if diff := deep.Equal(commands, []CommandDetails{{
+		Name:        "",
+		Description: "",
+		Arguments: []ArgumentDetails{
+			{
+				Name:     "Test",
+				Type:     "float64",
+				Required: false,
+				Default:  "1.25",
+			},
+		},
+	}}); diff != nil {
+		t.Error(diff)
+	}
+}
+
+func TestGetCommandsWithCommandMultipleCommands(t *testing.T) {
+	parser := New("")
+	parser.NewCommand("1", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+		}) {
+	})
+	parser.NewCommand("2", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+		}) {
+	})
+
+	commands := parser.GetCommands()
+
+	if diff := deep.Equal(commands, []CommandDetails{
+		{
+			Name:        "1",
+			Description: "",
+			Arguments:   []ArgumentDetails{},
+		},
+		{
+			Name:        "2",
+			Description: "",
+			Arguments:   []ArgumentDetails{},
+		},
+	}); diff != nil {
+		t.Error(diff)
 	}
 }
