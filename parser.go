@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -93,6 +94,23 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 	reflect.ValueOf(command.handler).Call([]reflect.Value{reflect.ValueOf(message), argsParamValue})
 
 	return nil
+}
+
+// RegisterHandler registers a simpler handler on a discordgo session to automatically parse incoming messages for you.
+func (parser *Parser) RegisterHandler(session *discordgo.Session) {
+	session.AddHandler(func(message *discordgo.MessageCreate) {
+		err := parser.RunCommand(message)
+
+		if err != nil {
+			_, err = session.ChannelMessageSend(
+				message.ChannelID,
+				fmt.Sprintf("An error occurred running your command:\n```\n%s\n```", err.Error()),
+			)
+			if err != nil {
+				log.Fatalf("Failed to send error message: %s", err.Error())
+			}
+		}
+	})
 }
 
 // New creates a new Parsley parser.
