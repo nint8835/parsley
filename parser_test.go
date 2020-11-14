@@ -70,3 +70,39 @@ func TestNewCommandWithValidData(t *testing.T) {
 		t.Errorf("adding command returned unexpected error")
 	}
 }
+
+func TestRunCommandWithNotMatchingPrefix(t *testing.T) {
+	parser := New("TEST")
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "message"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error")
+	}
+}
+
+func TestRunCommandWithSyntaxError(t *testing.T) {
+	parser := New(".")
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". \""}})
+	if err == nil {
+		t.Errorf("running command did not return error")
+	}
+}
+
+func TestRunCommandWithNoCommandProvided(t *testing.T) {
+	parser := New(".")
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "."}})
+	if errors.Unwrap(err) != ErrNoCommandProvided {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithUnknownCommand(t *testing.T) {
+	parser := New(".")
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".unknown"}})
+	if errors.Unwrap(err) != ErrUnknownCommand {
+		t.Errorf("running command did not return correct error")
+	}
+}

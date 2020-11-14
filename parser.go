@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/shlex"
 )
 
 // Command represents an individual Discord command.
@@ -35,7 +36,22 @@ func (parser *Parser) NewCommand(name, description string, handler interface{}) 
 // RunCommand parses the content of a specific message and runs the associated command, if found.
 func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 	if !strings.HasPrefix(message.Content, parser.prefix) {
-		return nil // TODO: Actual error here
+		return nil
+	}
+
+	trimmedCommand := strings.TrimPrefix(message.Content, parser.prefix)
+	arguments, err := shlex.Split(trimmedCommand)
+	if err != nil {
+		return fmt.Errorf("error parsing arguments: %w", err)
+	}
+
+	if len(arguments) == 0 {
+		return fmt.Errorf("error running command: %w", ErrNoCommandProvided)
+	}
+
+	_, ok := parser.commands[arguments[0]]
+	if !ok {
+		return fmt.Errorf("error running command: %w", ErrUnknownCommand)
 	}
 
 	return nil

@@ -13,3 +13,9 @@ var ErrHandlerInvalidFirstParameterType error = errors.New("incorrect first para
 
 // ErrHandlerInvalidSecondParameterType occurs when a provided handler does not expect a second parameter of the correct type.
 var ErrHandlerInvalidSecondParameterType error = errors.New("incorrect second parameter type for handler, second parameter must be of type struct")
+
+// ErrNoCommandProvided occurs when RunCommand is called on a message containing exclusively a prefix.
+var ErrNoCommandProvided error = errors.New("no command was provided")
+
+// ErrUnknownCommand occurs when the provided message contains an unknown command.
+var ErrUnknownCommand error = errors.New("unknown command")
