@@ -98,7 +98,7 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 
 // RegisterHandler registers a simpler handler on a discordgo session to automatically parse incoming messages for you.
 func (parser *Parser) RegisterHandler(session *discordgo.Session) {
-	session.AddHandler(func(message *discordgo.MessageCreate) {
+	session.AddHandler(func(session *discordgo.Session, message *discordgo.MessageCreate) {
 		err := parser.RunCommand(message)
 
 		if err != nil {
