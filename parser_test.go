@@ -174,3 +174,13 @@ func TestRunCommandWithDefaultArgumentValue(t *testing.T) {
 		t.Errorf("running command returned unexpected error")
 	}
 }
+
+func TestRunCommandWithEmptyCommandName(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("", "", func(message *discordgo.MessageCreate, args struct{}) {})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "."}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error")
+	}
+}

@@ -41,8 +41,8 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 		return nil
 	}
 
-	trimmedCommand := strings.TrimPrefix(message.Content, parser.prefix)
-	arguments, err := shlex.Split(trimmedCommand)
+	arguments, err := shlex.Split(message.Content)
+	arguments[0] = strings.TrimPrefix(arguments[0], parser.prefix)
 	if err != nil {
 		return fmt.Errorf("error parsing arguments: %w", err)
 	}
