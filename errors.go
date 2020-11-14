@@ -19,3 +19,6 @@ var ErrNoCommandProvided error = errors.New("no command was provided")
 
 // ErrUnknownCommand occurs when the provided message contains an unknown command.
 var ErrUnknownCommand error = errors.New("unknown command")
+
+// ErrRequiredArgumentMissing occurs when the provided message does not have values for all required arguments.
+var ErrRequiredArgumentMissing error = errors.New("one or more required arguments were not provided")

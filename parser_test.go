@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
@@ -104,5 +105,72 @@ func TestRunCommandWithUnknownCommand(t *testing.T) {
 	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".unknown"}})
 	if errors.Unwrap(err) != ErrUnknownCommand {
 		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithMissingRequiredArgument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			RequiredArg string
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test"}})
+	if errors.Unwrap(err) != ErrRequiredArgumentMissing {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidIntArgument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			IntArg int
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidFloat64Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			FloatArg float64
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithDefaultArgumentValue(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			DefaultArg string `default:"test"`
+		},
+	) {
+		if args.DefaultArg != "test" {
+			t.Errorf("handler was not passed correct value for default arg")
+		}
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error")
 	}
 }

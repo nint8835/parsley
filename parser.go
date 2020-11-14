@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -49,10 +50,47 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 		return fmt.Errorf("error running command: %w", ErrNoCommandProvided)
 	}
 
-	_, ok := parser.commands[arguments[0]]
+	command, ok := parser.commands[arguments[0]]
 	if !ok {
 		return fmt.Errorf("error running command: %w", ErrUnknownCommand)
 	}
+
+	argsParamType := reflect.TypeOf(command.handler).In(1)
+	argsParamValue := reflect.New(argsParamType).Elem()
+
+	for index := 0; index < argsParamValue.NumField(); index++ {
+		field := argsParamValue.Field(index)
+		var value string
+
+		if index >= len(arguments)-1 {
+			defaultVal, ok := argsParamType.Field(index).Tag.Lookup("default")
+			if !ok {
+				return fmt.Errorf("error parsing arguments: %w", ErrRequiredArgumentMissing)
+			}
+			value = defaultVal
+		} else {
+			value = arguments[index+1]
+		}
+
+		switch field.Kind() {
+		case reflect.String:
+			field.SetString(value)
+		case reflect.Int:
+			intVal, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetInt(int64(intVal))
+		case reflect.Float64:
+			floatVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetFloat(floatVal)
+		}
+	}
+
+	reflect.ValueOf(command.handler).Call([]reflect.Value{reflect.ValueOf(message), argsParamValue})
 
 	return nil
 }
