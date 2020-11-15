@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -85,20 +86,74 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 		}
 
 		switch field.Kind() {
-		case reflect.String:
-			field.SetString(value)
-		case reflect.Int:
+		case reflect.Bool:
+			boolVal, err := strconv.ParseBool(value)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetBool(boolVal)
+		case reflect.Int, reflect.Int64:
 			intVal, err := strconv.Atoi(value)
 			if err != nil {
 				return fmt.Errorf("error parsing arguments: %w", err)
 			}
 			field.SetInt(int64(intVal))
+		case reflect.Int8:
+			intVal, err := strconv.ParseInt(value, 10, 8)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetInt(intVal)
+		case reflect.Int16:
+			intVal, err := strconv.ParseInt(value, 10, 16)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetInt(intVal)
+		case reflect.Int32:
+			intVal, err := strconv.ParseInt(value, 10, 32)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetInt(intVal)
+		case reflect.Uint, reflect.Uint64:
+			intVal, err := strconv.ParseUint(value, 10, 64)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetUint(intVal)
+		case reflect.Uint8:
+			intVal, err := strconv.ParseUint(value, 10, 8)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetUint(intVal)
+		case reflect.Uint16:
+			intVal, err := strconv.ParseUint(value, 10, 16)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetUint(intVal)
+		case reflect.Uint32:
+			intVal, err := strconv.ParseUint(value, 10, 32)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetUint(intVal)
+		case reflect.Float32:
+			floatVal, err := strconv.ParseFloat(value, 32)
+			if err != nil {
+				return fmt.Errorf("error parsing arguments: %w", err)
+			}
+			field.SetFloat(floatVal)
 		case reflect.Float64:
 			floatVal, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return fmt.Errorf("error parsing arguments: %w", err)
 			}
 			field.SetFloat(floatVal)
+		case reflect.String:
+			field.SetString(value)
 		}
 	}
 
@@ -127,7 +182,14 @@ func (parser *Parser) RegisterHandler(session *discordgo.Session) {
 // GetCommands parses all registered commands and returns details related to each of them.
 func (parser *Parser) GetCommands() []CommandDetails {
 	commandDetails := make([]CommandDetails, 0)
-	for commandName, commandObj := range parser.commands {
+	commands := make([]string, 0)
+	for command := range parser.commands {
+		commands = append(commands, command)
+	}
+	sort.Strings(commands)
+
+	for _, commandName := range commands {
+		commandObj := parser.commands[commandName]
 		commandDetailsObj := CommandDetails{
 			Name:        commandName,
 			Description: commandObj.description,

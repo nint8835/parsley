@@ -116,12 +116,188 @@ func TestRunCommandWithMissingRequiredArgument(t *testing.T) {
 	}
 }
 
+func TestRunCommandWithInvalidBoolArgument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg bool
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
 func TestRunCommandWithInvalidIntArgument(t *testing.T) {
 	parser := New(".")
 	parser.NewCommand("test", "", func(
 		message *discordgo.MessageCreate,
 		args struct {
 			IntArg int
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidInt8Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg int8
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidInt16Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg int16
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidInt32Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg int32
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidInt64Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg int64
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidUintArgument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg uint
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidUint8Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg uint8
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidUint16Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg uint16
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidUint32Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg uint32
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidUint64Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg uint64
+		},
+	) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test ABC"}})
+	if errors.Unwrap(errors.Unwrap(err)) != strconv.ErrSyntax {
+		t.Errorf("running command did not return correct error")
+	}
+}
+
+func TestRunCommandWithInvalidFloat32Argument(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("test", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Arg float32
 		},
 	) {
 	})
