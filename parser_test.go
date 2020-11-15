@@ -231,7 +231,7 @@ func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
 	}
 }
 
-func TestGetCommandsWithCommandMultipleCommands(t *testing.T) {
+func TestGetCommandsWithMultipleCommands(t *testing.T) {
 	parser := New("")
 	parser.NewCommand("1", "", func(
 		message *discordgo.MessageCreate,
@@ -258,6 +258,16 @@ func TestGetCommandsWithCommandMultipleCommands(t *testing.T) {
 			Arguments:   []ArgumentDetails{},
 		},
 	}); diff != nil {
+		t.Error(diff)
+	}
+}
+
+func TestGetCommandsWithNoCommands(t *testing.T) {
+	parser := New("")
+
+	commands := parser.GetCommands()
+
+	if diff := deep.Equal(commands, []CommandDetails{}); diff != nil {
 		t.Error(diff)
 	}
 }
