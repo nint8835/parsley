@@ -20,10 +20,11 @@ type Command struct {
 
 // ArgumentDetails represents the details of an individual command argument.
 type ArgumentDetails struct {
-	Name     string
-	Type     string
-	Required bool
-	Default  string
+	Name        string
+	Type        string
+	Description string
+	Required    bool
+	Default     string
 }
 
 // CommandDetails represents the parsed details of an individual command.
@@ -202,11 +203,16 @@ func (parser *Parser) GetCommands() []CommandDetails {
 			arg := argsType.Field(index)
 
 			defaultVal, hasDefault := arg.Tag.Lookup("default")
+			description, hasDescription := arg.Tag.Lookup("description")
+			if !hasDescription {
+				description = "No description provided."
+			}
 			commandDetailsObj.Arguments = append(commandDetailsObj.Arguments, ArgumentDetails{
-				Name:     arg.Name,
-				Type:     arg.Type.Name(),
-				Required: !hasDefault,
-				Default:  defaultVal,
+				Name:        arg.Name,
+				Type:        arg.Type.Name(),
+				Description: description,
+				Required:    !hasDefault,
+				Default:     defaultVal,
 			})
 		}
 

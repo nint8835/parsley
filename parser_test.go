@@ -369,10 +369,11 @@ func TestGetCommandsWithCommandWithRequiredArg(t *testing.T) {
 		Description: "",
 		Arguments: []ArgumentDetails{
 			{
-				Name:     "Test",
-				Type:     "string",
-				Required: true,
-				Default:  "",
+				Name:        "Test",
+				Type:        "string",
+				Description: "No description provided.",
+				Required:    true,
+				Default:     "",
 			},
 		},
 	}}); diff != nil {
@@ -396,10 +397,39 @@ func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
 		Description: "",
 		Arguments: []ArgumentDetails{
 			{
-				Name:     "Test",
-				Type:     "float64",
-				Required: false,
-				Default:  "1.25",
+				Name:        "Test",
+				Type:        "float64",
+				Description: "No description provided.",
+				Required:    false,
+				Default:     "1.25",
+			},
+		},
+	}}); diff != nil {
+		t.Error(diff)
+	}
+}
+
+func TestGetCommandsWithCommandWithArgumentWithDescription(t *testing.T) {
+	parser := New("")
+	parser.NewCommand("", "", func(
+		message *discordgo.MessageCreate,
+		args struct {
+			Test string `description:"Test"`
+		}) {
+	})
+
+	commands := parser.GetCommands()
+
+	if diff := deep.Equal(commands, []CommandDetails{{
+		Name:        "",
+		Description: "",
+		Arguments: []ArgumentDetails{
+			{
+				Name:        "Test",
+				Type:        "string",
+				Description: "Test",
+				Required:    true,
+				Default:     "",
 			},
 		},
 	}}); diff != nil {
