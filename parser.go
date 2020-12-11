@@ -180,6 +180,42 @@ func (parser *Parser) RegisterHandler(session *discordgo.Session) {
 	})
 }
 
+// GetCommand retrieves the details of an individual command.
+func (parser *Parser) GetCommand(commandName string) (CommandDetails, error) {
+	commandObj, found := parser.commands[commandName]
+
+	if !found {
+		return CommandDetails{}, ErrUnknownCommand
+	}
+
+	commandDetailsObj := CommandDetails{
+		Name:        commandName,
+		Description: commandObj.description,
+		Arguments:   make([]ArgumentDetails, 0),
+	}
+
+	argsType := reflect.TypeOf(commandObj.handler).In(1)
+
+	for index := 0; index < argsType.NumField(); index++ {
+		arg := argsType.Field(index)
+
+		defaultVal, hasDefault := arg.Tag.Lookup("default")
+		description, hasDescription := arg.Tag.Lookup("description")
+		if !hasDescription {
+			description = "No description provided."
+		}
+		commandDetailsObj.Arguments = append(commandDetailsObj.Arguments, ArgumentDetails{
+			Name:        arg.Name,
+			Type:        arg.Type.Name(),
+			Description: description,
+			Required:    !hasDefault,
+			Default:     defaultVal,
+		})
+	}
+
+	return commandDetailsObj, nil
+}
+
 // GetCommands parses all registered commands and returns details related to each of them.
 func (parser *Parser) GetCommands() []CommandDetails {
 	commandDetails := make([]CommandDetails, 0)
@@ -190,33 +226,8 @@ func (parser *Parser) GetCommands() []CommandDetails {
 	sort.Strings(commands)
 
 	for _, commandName := range commands {
-		commandObj := parser.commands[commandName]
-		commandDetailsObj := CommandDetails{
-			Name:        commandName,
-			Description: commandObj.description,
-			Arguments:   make([]ArgumentDetails, 0),
-		}
-
-		argsType := reflect.TypeOf(commandObj.handler).In(1)
-
-		for index := 0; index < argsType.NumField(); index++ {
-			arg := argsType.Field(index)
-
-			defaultVal, hasDefault := arg.Tag.Lookup("default")
-			description, hasDescription := arg.Tag.Lookup("description")
-			if !hasDescription {
-				description = "No description provided."
-			}
-			commandDetailsObj.Arguments = append(commandDetailsObj.Arguments, ArgumentDetails{
-				Name:        arg.Name,
-				Type:        arg.Type.Name(),
-				Description: description,
-				Required:    !hasDefault,
-				Default:     defaultVal,
-			})
-		}
-
-		commandDetails = append(commandDetails, commandDetailsObj)
+		commandInfo, _ := parser.GetCommand(commandName)
+		commandDetails = append(commandDetails, commandInfo)
 	}
 
 	return commandDetails

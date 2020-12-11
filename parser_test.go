@@ -353,7 +353,16 @@ func TestRunCommandWithEmptyCommandName(t *testing.T) {
 	}
 }
 
-func TestGetCommandsWithCommandWithRequiredArg(t *testing.T) {
+func TestGetCommandWithUnknownCommand(t *testing.T) {
+	parser := New("")
+
+	_, err := parser.GetCommand("")
+	if !errors.Is(err, ErrUnknownCommand) {
+		t.Errorf("function did not return expected error")
+	}
+}
+
+func TestGetCommandWithCommandWithRequiredArg(t *testing.T) {
 	parser := New("")
 	parser.NewCommand("", "", func(
 		message *discordgo.MessageCreate,
@@ -362,9 +371,12 @@ func TestGetCommandsWithCommandWithRequiredArg(t *testing.T) {
 		}) {
 	})
 
-	commands := parser.GetCommands()
+	command, err := parser.GetCommand("")
+	if err != nil {
+		t.Errorf("got unexpected error")
+	}
 
-	if diff := deep.Equal(commands, []CommandDetails{{
+	if diff := deep.Equal(command, CommandDetails{
 		Name:        "",
 		Description: "",
 		Arguments: []ArgumentDetails{
@@ -376,12 +388,12 @@ func TestGetCommandsWithCommandWithRequiredArg(t *testing.T) {
 				Default:     "",
 			},
 		},
-	}}); diff != nil {
+	}); diff != nil {
 		t.Error(diff)
 	}
 }
 
-func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
+func TestGetCommandWithCommandWithDefaultArg(t *testing.T) {
 	parser := New("")
 	parser.NewCommand("", "", func(
 		message *discordgo.MessageCreate,
@@ -390,9 +402,12 @@ func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
 		}) {
 	})
 
-	commands := parser.GetCommands()
+	command, err := parser.GetCommand("")
+	if err != nil {
+		t.Errorf("got unexpected error")
+	}
 
-	if diff := deep.Equal(commands, []CommandDetails{{
+	if diff := deep.Equal(command, CommandDetails{
 		Name:        "",
 		Description: "",
 		Arguments: []ArgumentDetails{
@@ -404,12 +419,12 @@ func TestGetCommandsWithCommandWithDefaultArg(t *testing.T) {
 				Default:     "1.25",
 			},
 		},
-	}}); diff != nil {
+	}); diff != nil {
 		t.Error(diff)
 	}
 }
 
-func TestGetCommandsWithCommandWithArgumentWithDescription(t *testing.T) {
+func TestGetCommandWithCommandWithArgumentWithDescription(t *testing.T) {
 	parser := New("")
 	parser.NewCommand("", "", func(
 		message *discordgo.MessageCreate,
@@ -418,9 +433,12 @@ func TestGetCommandsWithCommandWithArgumentWithDescription(t *testing.T) {
 		}) {
 	})
 
-	commands := parser.GetCommands()
+	command, err := parser.GetCommand("")
+	if err != nil {
+		t.Errorf("got unexpected error")
+	}
 
-	if diff := deep.Equal(commands, []CommandDetails{{
+	if diff := deep.Equal(command, CommandDetails{
 		Name:        "",
 		Description: "",
 		Arguments: []ArgumentDetails{
@@ -432,7 +450,7 @@ func TestGetCommandsWithCommandWithArgumentWithDescription(t *testing.T) {
 				Default:     "",
 			},
 		},
-	}}); diff != nil {
+	}); diff != nil {
 		t.Error(diff)
 	}
 }
@@ -452,17 +470,18 @@ func TestGetCommandsWithMultipleCommands(t *testing.T) {
 
 	commands := parser.GetCommands()
 
+	command1, err := parser.GetCommand("1")
+	if err != nil {
+		t.Errorf("got unexpected error")
+	}
+
+	command2, err := parser.GetCommand("2")
+	if err != nil {
+		t.Errorf("got unexpected error")
+	}
+
 	if diff := deep.Equal(commands, []CommandDetails{
-		{
-			Name:        "1",
-			Description: "",
-			Arguments:   []ArgumentDetails{},
-		},
-		{
-			Name:        "2",
-			Description: "",
-			Arguments:   []ArgumentDetails{},
-		},
+		command1, command2,
 	}); diff != nil {
 		t.Error(diff)
 	}
