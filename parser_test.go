@@ -353,6 +353,54 @@ func TestRunCommandWithEmptyCommandName(t *testing.T) {
 	}
 }
 
+func TestRunCommandWithRequiredValProvidedAsKwarg(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("", "", func(message *discordgo.MessageCreate, args struct {
+		Arg string
+	}) {
+		if args.Arg != "kwargval" {
+			t.Errorf("handler was not passed correct value for kwarg")
+		}
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". Arg=kwargval"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error")
+	}
+}
+
+func TestRunCommandWithKwargInMiddle(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("", "", func(message *discordgo.MessageCreate, args struct {
+		Arg1 string
+		Arg2 string
+		Arg3 string
+	}) {
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". A Arg2=B C"}})
+	if !errors.Is(err, ErrKwargsMustBeAtEnd) {
+		t.Errorf("running command returned incorrect error")
+	}
+}
+
+func TestRunCommandWithKwargAndDefault(t *testing.T) {
+	parser := New(".")
+	parser.NewCommand("", "", func(message *discordgo.MessageCreate, args struct {
+		Arg1 string `default:"A"`
+		Arg2 string `default:"B"`
+	}) {
+		if args.Arg2 != "overridden" {
+			t.Errorf("handler was not provided correct value for kwarg")
+		}
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". Arg2=overridden"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error")
+	}
+}
+
 func TestGetCommandWithUnknownCommand(t *testing.T) {
 	parser := New("")
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,6 +12,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/shlex"
 )
+
+var _KwargPattern = regexp.MustCompile(`([a-zA-Z_\d]+)=(.*)`)
 
 // Command represents an individual Discord command.
 type Command struct {
@@ -69,21 +72,41 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 		return fmt.Errorf("error running command: %w", ErrUnknownCommand)
 	}
 
+	kwargs := make(map[string]string)
+	nonKwargArgs := make([]string, 0)
+
+	parsingKwargs := false
+	for _, val := range arguments[1:] {
+		matches := _KwargPattern.FindStringSubmatch(val)
+		if len(matches) == 0 {
+			if parsingKwargs {
+				return fmt.Errorf("error running command: %w", ErrKwargsMustBeAtEnd)
+			}
+			nonKwargArgs = append(nonKwargArgs, val)
+			continue
+		}
+		kwargs[matches[1]] = matches[2]
+		parsingKwargs = true
+	}
+
 	argsParamType := reflect.TypeOf(command.handler).In(1)
 	argsParamValue := reflect.New(argsParamType).Elem()
 
 	for index := 0; index < argsParamValue.NumField(); index++ {
 		field := argsParamValue.Field(index)
+		fieldType := argsParamType.Field(index)
 		var value string
 
-		if index >= len(arguments)-1 {
-			defaultVal, ok := argsParamType.Field(index).Tag.Lookup("default")
+		if kwargVal, found := kwargs[fieldType.Name]; found {
+			value = kwargVal
+		} else if index >= len(nonKwargArgs) {
+			defaultVal, ok := fieldType.Tag.Lookup("default")
 			if !ok {
 				return fmt.Errorf("error parsing arguments: %w", ErrRequiredArgumentMissing)
 			}
 			value = defaultVal
 		} else {
-			value = arguments[index+1]
+			value = nonKwargArgs[index]
 		}
 
 		switch field.Kind() {

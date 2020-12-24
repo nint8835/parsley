@@ -19,3 +19,6 @@ var ErrUnknownCommand error = errors.New("unknown command")
 
 // ErrRequiredArgumentMissing occurs when the provided message does not have values for all required arguments.
 var ErrRequiredArgumentMissing error = errors.New("one or more required arguments were not provided")
+
+// ErrKwargsMustBeAtEnd occurs when a user provides keyword arguments in the middle of positional arguments
+var ErrKwargsMustBeAtEnd error = errors.New("keyword arguments must be provided as the last arguments")
