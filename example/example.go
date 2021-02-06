@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/nint8835/parsley"
@@ -16,8 +18,13 @@ func main() {
 
 	parser := parsley.New("test!")
 	parser.RegisterHandler(bot)
-
 	parser.NewCommand("hello", "Greets something.", _HelloWorldCommand)
+
+	bot.Open()
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
+	bot.Close()
 }
 
 type _HelloWorldArgs struct {
