@@ -13,7 +13,7 @@ import (
 	"github.com/google/shlex"
 )
 
-var _KwargPattern = regexp.MustCompile(`([a-zA-Z_\d]+)=(.*)`)
+var _KwargPattern = regexp.MustCompile(`^([a-zA-Z_\d]+)=(.*)$`)
 
 // Command represents an individual Discord command.
 type Command struct {
@@ -72,6 +72,15 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 		return fmt.Errorf("error running command: %w", ErrUnknownCommand)
 	}
 
+	argsParamType := reflect.TypeOf(command.handler).In(1)
+	argsParamValue := reflect.New(argsParamType).Elem()
+
+	commandArgNames := map[string]bool{}
+
+	for index := 0; index < argsParamValue.NumField(); index++ {
+		commandArgNames[argsParamType.Field(index).Name] = true
+	}
+
 	kwargs := make(map[string]string)
 	nonKwargArgs := make([]string, 0)
 
@@ -85,12 +94,14 @@ func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
 			nonKwargArgs = append(nonKwargArgs, val)
 			continue
 		}
+		_, isValidKwarg := commandArgNames[matches[1]]
+		if !isValidKwarg {
+			nonKwargArgs = append(nonKwargArgs, val)
+			continue
+		}
 		kwargs[matches[1]] = matches[2]
 		parsingKwargs = true
 	}
-
-	argsParamType := reflect.TypeOf(command.handler).In(1)
-	argsParamValue := reflect.New(argsParamType).Elem()
 
 	for index := 0; index < argsParamValue.NumField(); index++ {
 		field := argsParamValue.Field(index)
