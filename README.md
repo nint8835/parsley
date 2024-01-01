@@ -7,7 +7,7 @@ Parsley is an addon library for [discordgo](https://github.com/bwmarrin/discordg
 ## Installation
 
 ```bash
-go get pkg.nit.so/parsley
+go get github.com/nint8835/parsley
 ```
 
 ## Example
