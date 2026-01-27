@@ -2,6 +2,7 @@ package parsley
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -398,6 +399,39 @@ func TestRunCommandWithKwargAndDefault(t *testing.T) {
 	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ". Arg2=overridden"}})
 	if err != nil {
 		t.Errorf("running command returned unexpected error")
+	}
+}
+
+func TestRunCommandWithUnicodeQuotes(t *testing.T) {
+	unicodeQuotes := []rune{
+		0x2018, 0x2019, 0x201C, 0x201D,
+		0x201B, 0x201A, 0x201F, 0x201E,
+	}
+
+	for _, quote := range unicodeQuotes {
+		t.Run(
+			fmt.Sprintf("QuoteU+%X", quote), func(t *testing.T) {
+				parser := New(".")
+				parser.NewCommand("", "", func(message *discordgo.MessageCreate, args struct {
+					Arg1 string
+					Arg2 string `default:"default"`
+				}) {
+					if args.Arg1 != "first arg" {
+						t.Errorf("handler was not passed correct value for Arg1 (expected 'first arg', got '%s')", args.Arg1)
+					}
+					if args.Arg2 != "default" {
+						t.Errorf("handler was not passed correct value for Arg2 (expected 'default', got '%s')", args.Arg2)
+					}
+				})
+
+				err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{
+					Content: fmt.Sprintf(". %cfirst arg%c", quote, quote),
+				}})
+				if err != nil {
+					t.Errorf("running command returned unexpected error: %v", err)
+				}
+			},
+		)
 	}
 }
 
