@@ -12,8 +12,8 @@ import (
 
 func TestNewParser(t *testing.T) {
 	parser := New("test")
-	if parser.prefix != "test" {
-		t.Errorf("parser was returned with incorrect prefix %s", parser.prefix)
+	if len(parser.prefixes) != 1 || parser.prefixes[0] != "test" {
+		t.Errorf("parser was returned with incorrect prefixes %v", parser.prefixes)
 	}
 	if len(parser.commands) != 0 {
 		t.Error("parser was returned with non-empty initial command list")
@@ -576,5 +576,92 @@ func TestGetCommandsWithNoCommands(t *testing.T) {
 
 	if diff := deep.Equal(commands, []CommandDetails{}); diff != nil {
 		t.Error(diff)
+	}
+}
+
+func TestNewParserWithMultiplePrefixes(t *testing.T) {
+	parser := New("test!", ",")
+	if len(parser.prefixes) != 2 {
+		t.Errorf("parser was returned with incorrect number of prefixes: %d", len(parser.prefixes))
+	}
+	if parser.prefixes[0] != "test!" {
+		t.Errorf("parser first prefix was incorrect: %s", parser.prefixes[0])
+	}
+	if parser.prefixes[1] != "," {
+		t.Errorf("parser second prefix was incorrect: %s", parser.prefixes[1])
+	}
+}
+
+func TestRunCommandWithFirstPrefix(t *testing.T) {
+	parser := New("!", ",")
+	called := false
+	parser.NewCommand("test", "", func(message *discordgo.MessageCreate, args struct{}) {
+		called = true
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "!test"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error: %v", err)
+	}
+	if !called {
+		t.Error("command handler was not called")
+	}
+}
+
+func TestRunCommandWithSecondPrefix(t *testing.T) {
+	parser := New("!", ",")
+	called := false
+	parser.NewCommand("test", "", func(message *discordgo.MessageCreate, args struct{}) {
+		called = true
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ",test"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error: %v", err)
+	}
+	if !called {
+		t.Error("command handler was not called")
+	}
+}
+
+func TestRunCommandWithNonMatchingPrefixMultiple(t *testing.T) {
+	parser := New("!", ",")
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: ".test"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error: %v", err)
+	}
+}
+
+func TestRunCommandWithEmptyStringPrefix(t *testing.T) {
+	parser := New("")
+	called := false
+	parser.NewCommand("test", "", func(message *discordgo.MessageCreate, args struct{}) {
+		called = true
+	})
+
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "test"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error: %v", err)
+	}
+	if !called {
+		t.Error("command handler should be called with empty string prefix")
+	}
+}
+
+func TestRunCommandWithOverlappingPrefixes(t *testing.T) {
+	parser := New("test!", "test")
+	called := false
+	parser.NewCommand("hello", "", func(message *discordgo.MessageCreate, args struct{}) {
+		called = true
+	})
+
+	// "test!hello" should match "test!" first, yielding command "hello"
+	err := parser.RunCommand(&discordgo.MessageCreate{Message: &discordgo.Message{Content: "test!hello"}})
+	if err != nil {
+		t.Errorf("running command returned unexpected error: %v", err)
+	}
+	if !called {
+		t.Error("command handler was not called")
 	}
 }

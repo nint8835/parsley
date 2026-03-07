@@ -63,7 +63,7 @@ type CommandDetails struct {
 
 // Parser represents a parser for Discord commands.
 type Parser struct {
-	prefix   string
+	prefixes []string
 	commands map[string]Command
 }
 
@@ -81,13 +81,20 @@ func (parser *Parser) NewCommand(name, description string, handler interface{}) 
 
 // RunCommand parses the content of a specific message and runs the associated command, if found.
 func (parser *Parser) RunCommand(message *discordgo.MessageCreate) error {
-	if !strings.HasPrefix(message.Content, parser.prefix) {
+	var matchedPrefix *string
+	for _, prefix := range parser.prefixes {
+		if strings.HasPrefix(message.Content, prefix) {
+			matchedPrefix = &prefix
+			break
+		}
+	}
+	if matchedPrefix == nil {
 		return nil
 	}
 
 	normalizedContent := normalizeSmartQuotes(message.Content)
 	arguments, err := shlex.Split(normalizedContent)
-	arguments[0] = strings.TrimPrefix(arguments[0], parser.prefix)
+	arguments[0] = strings.TrimPrefix(arguments[0], *matchedPrefix)
 	if err != nil {
 		return fmt.Errorf("error parsing arguments: %w", err)
 	}
@@ -293,9 +300,10 @@ func (parser *Parser) GetCommands() []CommandDetails {
 }
 
 // New creates a new Parsley parser.
-func New(prefix string) *Parser {
+func New(prefixes ...string) *Parser {
 	return &Parser{
-		prefix, make(map[string]Command, 0),
+		prefixes: prefixes,
+		commands: make(map[string]Command, 0),
 	}
 }
 
